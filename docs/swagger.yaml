@@ -1,0 +1,432 @@
+basePath: /
+definitions:
+  models.Author:
+    properties:
+      id:
+        example: 1
+        type: integer
+      name:
+        example: Harsimran
+        type: string
+    required:
+    - id
+    - name
+    type: object
+  models.Book:
+    properties:
+      author:
+        $ref: '#/definitions/models.Author'
+        description: 'ISBN        string  `json: "isbn"`'
+      description:
+        example: A book on Golang
+        type: string
+      id:
+        example: 1
+        type: integer
+      title:
+        example: Heyy! Go
+        type: string
+    required:
+    - author
+    - id
+    - title
+    type: object
+  models.User:
+    properties:
+      email:
+        example: hshs@gmail.com
+        type: string
+      name:
+        example: Harsimran
+        type: string
+      password:
+        example: hars123456
+        type: string
+    required:
+    - email
+    - password
+    type: object
+host: localhost:8080
+info:
+  contact:
+    email: support@swagger.io
+    name: API Support
+    url: http://www.swagger.io/support
+  description: A Book - Author REST API
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms
+  title: Swagger REST API
+  version: "1.0"
+paths:
+  /authors:
+    get:
+      description: Get Authors
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: All authors
+          schema:
+            items:
+              $ref: '#/definitions/models.Author'
+            type: array
+        "404":
+          description: StatusNotFound
+          schema:
+            type: string
+        "500":
+          description: StatusInternalServerError
+          schema:
+            type: string
+      summary: To get details of all authors
+      tags:
+      - authors
+  /authors/{id}:
+    delete:
+      description: Delete Author
+      parameters:
+      - description: Author ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Deleted author successfully
+          schema:
+            type: string
+        "404":
+          description: StatusNotFound
+          schema:
+            type: string
+        "500":
+          description: InternalServerError
+          schema:
+            type: string
+      summary: To delete an author with the given id
+      tags:
+      - authors
+    get:
+      description: Get Author by ID
+      parameters:
+      - description: Author ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "200":
+          description: Author`` stored at the given ID
+          schema:
+            $ref: '#/definitions/models.Author'
+        "404":
+          description: StatusNotFound
+          schema:
+            type: string
+        "500":
+          description: StatusInternalServerError
+          schema:
+            type: string
+      summary: To get details of an author with it's id.
+      tags:
+      - authors
+  /authors/{id}/edit:
+    put:
+      consumes:
+      - application/json
+      description: Update Author
+      parameters:
+      - description: Author ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Update author request body parameters
+        in: body
+        name: author
+        required: true
+        schema:
+          $ref: '#/definitions/models.Author'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Updated author details successfully
+          schema:
+            type: string
+        "404":
+          description: StatusNotFound
+          schema:
+            type: string
+        "500":
+          description: InternalServerError
+          schema:
+            type: string
+        default:
+          description: DefaultError
+          schema:
+            type: string
+      summary: To update an author with the given id
+      tags:
+      - authors
+  /authors/create:
+    post:
+      consumes:
+      - application/json
+      description: Create a new author
+      parameters:
+      - description: New author request body parameters
+        in: body
+        name: author
+        required: true
+        schema:
+          $ref: '#/definitions/models.Author'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: New author created
+          schema:
+            $ref: '#/definitions/models.Author'
+        "500":
+          description: InternalServerError
+          schema:
+            type: string
+        default:
+          description: DefaultError
+          schema:
+            type: string
+      summary: To create a new author
+      tags:
+      - authors
+  /books:
+    get:
+      description: Get Books
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: All books
+          schema:
+            items:
+              $ref: '#/definitions/models.Book'
+            type: array
+        "404":
+          description: StatusNotFound
+          schema:
+            type: string
+        "500":
+          description: StatusInternalServerError
+          schema:
+            type: string
+      summary: To get details of all books
+      tags:
+      - books
+  /books/{id}:
+    delete:
+      description: Delete Book
+      parameters:
+      - description: Book ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Deleted book successfully
+          schema:
+            type: string
+        "404":
+          description: StatusNotFound
+          schema:
+            type: string
+        "500":
+          description: InternalServerError
+          schema:
+            type: string
+      summary: To delete a book with the given id
+      tags:
+      - books
+    get:
+      description: Get Book by ID
+      parameters:
+      - description: Book ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "200":
+          description: Book stored at the given ID
+          schema:
+            $ref: '#/definitions/models.Book'
+        "404":
+          description: StatusNotFound
+          schema:
+            type: string
+        "500":
+          description: StatusInternalServerError
+          schema:
+            type: string
+      summary: To get details of a book with it's id.
+      tags:
+      - books
+  /books/{id}/edit:
+    put:
+      consumes:
+      - application/json
+      description: Update Book
+      parameters:
+      - description: Book ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Update book request body parameters
+        in: body
+        name: book
+        required: true
+        schema:
+          $ref: '#/definitions/models.Book'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Updated book details successfully
+          schema:
+            type: string
+        "404":
+          description: StatusNotFound
+          schema:
+            type: string
+        "500":
+          description: InternalServerError
+          schema:
+            type: string
+        default:
+          description: DefaultError
+          schema:
+            type: string
+      summary: To update a book with the given id
+      tags:
+      - books
+  /books/create:
+    post:
+      consumes:
+      - application/json
+      description: Create a new book
+      parameters:
+      - description: New book request body parameters
+        in: body
+        name: book
+        required: true
+        schema:
+          $ref: '#/definitions/models.Book'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: New book created
+          schema:
+            $ref: '#/definitions/models.Book'
+        "500":
+          description: InternalServerError
+          schema:
+            type: string
+        default:
+          description: DefaultError
+          schema:
+            type: string
+      summary: To create a new book
+      tags:
+      - books
+  /login:
+    post:
+      consumes:
+      - application/json
+      description: Login User
+      parameters:
+      - description: Login request body parameters
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/models.User'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: WELCOME! 'user.Email'. Login successful.
+          schema:
+            type: string
+        "400":
+          description: StatusBadRequest
+          schema:
+            type: string
+        "401":
+          description: StatusUnathorized
+          schema:
+            type: string
+        "404":
+          description: StatusNotFound
+          schema:
+            type: string
+        "500":
+          description: StatusInternalServerError
+          schema:
+            type: string
+      summary: To login a registered user
+      tags:
+      - users
+  /logout:
+    post:
+      description: UserLogout
+      responses:
+        "200":
+          description: Logout successful.
+          schema:
+            type: string
+        "400":
+          description: StatusBadRequest
+          schema:
+            type: string
+      summary: To logout
+      tags:
+      - users
+  /register:
+    post:
+      consumes:
+      - application/json
+      description: Register User
+      parameters:
+      - description: Register User
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/models.User'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Registration successful
+          schema:
+            type: string
+        "400":
+          description: StatusBadRequest
+          schema:
+            type: string
+        "500":
+          description: StatusInternalServerError
+          schema:
+            type: string
+      summary: To register a user
+      tags:
+      - users
+swagger: "2.0"
