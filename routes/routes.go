@@ -50,5 +50,4 @@ func Setup(router *mux.Router) {
 	router.HandleFunc("/authors/{id}", controllers.DeleteAuthor).Methods("DELETE")
 	// Route for updating (patch) an author :
 	// router.HandleFunc("/authors/{id}/edit", patchAuthor).Methods("PATCH")
-
 }

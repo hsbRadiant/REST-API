@@ -623,6 +623,7 @@ func UpdateBook(w http.ResponseWriter, r *http.Request) {
 // @Failure 500 {string} string "InternalServerError"
 // @Router /books/{id} [delete]
 func DeleteBook(w http.ResponseWriter, r *http.Request) {
+	// w.Header().Set("Content-Type", "application/json")
 	setContentType(w)
 	params := mux.Vars(r)
 
