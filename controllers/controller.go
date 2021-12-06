@@ -28,18 +28,23 @@ var (
 func CheckError(e error) {
 	if e != nil {
 		log.Fatal(e.Error())
-		// panic(e.Error())
 	}
 }
 
 func CheckErrorJSON(w http.ResponseWriter, code int, message string) {
 	response, _ := json.Marshal(map[string]string{"error": message}) // creating a new instance of map type and passing it to be marshalled into JSON.
+	// w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.WriteHeader(code)
 	w.Write(response)
 }
 
-func setContentType(hw *http.ResponseWriter) {
-	(*hw).Header().Set("Content-Type", "application/json")
+// func setContentType(rw *http.ResponseWriter) {
+// 	(*rw).Header().Set("Content-Type", "application/json; charset=utf-8") // took reference from Error function definition for 'charset' property (READ about 'charset=utf-8')
+// }
+
+// Was initially taking a pointer type parameter - Understand any differene in taking a pointer type param. to a normal (value type) param.
+func setContentType(rw http.ResponseWriter) {
+	(rw).Header().Set("Content-Type", "application/json; charset=utf-8") // took reference from Error function definition for 'charset' property (READ about 'charset=utf-8')
 }
 
 // Validating the given email address for the correct form using a 'RegExp' :-
@@ -126,7 +131,7 @@ func AuthorizeClientRequest(endpoint func(http.ResponseWriter, *http.Request)) h
 // @Failure 500 {string} string "StatusInternalServerError"
 // @Router /register [post]
 func RegisterUser(w http.ResponseWriter, r *http.Request) {
-	setContentType(&w)
+	setContentType(w)
 
 	// Will help in handling 'EOF' :
 	if r.Body == http.NoBody {
@@ -207,7 +212,7 @@ func RegisterUser(w http.ResponseWriter, r *http.Request) {
 // @Failure 500 {string} string "StatusInternalServerError"
 // @Router /login [post]
 func UserLogin(w http.ResponseWriter, r *http.Request) {
-	setContentType(&w)
+	setContentType(w)
 
 	if r.Body == http.NoBody {
 		fmt.Fprintf(w, "Please provide login credentials in the request body.")
@@ -353,7 +358,7 @@ func GetBooks(w http.ResponseWriter, r *http.Request) {
 		Books = append(Books, book)
 	}
 	// fmt.Println(Books)
-	setContentType(&w)
+	setContentType(w)
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(Books)
 	// res, _ := json.Marshal(Books)
@@ -396,7 +401,7 @@ func GetBook(w http.ResponseWriter, r *http.Request) {
 			// return
 		}
 	}
-	setContentType(&w)
+	setContentType(w)
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(book)
 
@@ -421,7 +426,7 @@ func GetBook(w http.ResponseWriter, r *http.Request) {
 // @Router /books/create [post]
 func CreateBook(w http.ResponseWriter, r *http.Request) {
 	// w.Header().Set("Content-Type", "application/json")
-	setContentType(&w)
+	setContentType(w)
 	var book models.Book
 	// fmt.Fprintf(w, "REQUEST BODY : %v\n", r.Body)
 	err := json.NewDecoder(r.Body).Decode(&book)
@@ -507,7 +512,7 @@ func CreateBook(w http.ResponseWriter, r *http.Request) {
 // @Router /books/{id}/edit [put]
 func UpdateBook(w http.ResponseWriter, r *http.Request) {
 
-	setContentType(&w)
+	setContentType(w)
 	params := mux.Vars(r)
 
 	var originalBook models.Book
@@ -612,7 +617,7 @@ func UpdateBook(w http.ResponseWriter, r *http.Request) {
 // @Router /books/{id} [delete]
 func DeleteBook(w http.ResponseWriter, r *http.Request) {
 	// w.Header().Set("Content-Type", "application/json")
-	setContentType(&w)
+	setContentType(w)
 	params := mux.Vars(r)
 
 	// res, err := db.Exec("UPDATE authors SET book_id = NULL where book_id = ?", params["id"])
@@ -682,7 +687,7 @@ func GetAuthors(w http.ResponseWriter, r *http.Request) {
 		Authors = append(Authors, author)
 		// fmt.Println(Authors)
 	}
-	setContentType(&w)
+	setContentType(w)
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(Authors)
 }
@@ -699,7 +704,7 @@ func GetAuthors(w http.ResponseWriter, r *http.Request) {
 // @Failure default {string} string "DefaultError"
 // @Router /authors/create [post]
 func CreateAuthor(w http.ResponseWriter, r *http.Request) {
-	setContentType(&w)
+	setContentType(w)
 
 	var author models.Author
 	err := json.NewDecoder(r.Body).Decode(&author)
@@ -747,7 +752,7 @@ func CreateAuthor(w http.ResponseWriter, r *http.Request) {
 // @Failure 500 {string} string "StatusInternalServerError"
 // @Router /authors/{id} [get]
 func GetAuthor(w http.ResponseWriter, r *http.Request) {
-	setContentType(&w)
+	setContentType(w)
 
 	params := mux.Vars(r)
 	row := db.QueryRow("SELECT id, name FROM authors WHERE id = ?", params["id"])
@@ -788,7 +793,7 @@ func UpdateAuthor(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "Please provide a request body.")
 		return
 	}
-	setContentType(&w)
+	setContentType(w)
 	var updatedAuthor models.Author
 	err := json.NewDecoder(r.Body).Decode(&updatedAuthor)
 	// CheckError(err)
@@ -832,7 +837,7 @@ func DeleteAuthor(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "Book with id %v not found.", params["id"])
 		return
 	}
-	setContentType(&w)
+	setContentType(w)
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode("Deleted data successfully")
 }

@@ -3,6 +3,7 @@ package configuration
 import (
 	"database/sql"
 	"log"
+	"os"
 	"time"
 
 	"github.com/go-sql-driver/mysql"
@@ -11,11 +12,11 @@ import (
 // WAY TO CONFIGURE - (taught in Golang databse access tutorial) :
 func NewDatabase() *sql.DB {
 	cnfg := mysql.Config{
-		User:      "root",          // os.Getenv("DBUSER")
-		Passwd:    "NoorBedi@1997", //  os.Getenv("DBPASS")
+		User:      os.Getenv("DBUSER"),
+		Passwd:    os.Getenv("DBPASS"),
 		Net:       "tcp",
-		Addr:      "127.0.0.1:3306",
-		DBName:    "test",
+		Addr:      os.Getenv("DBADDRESS"), //127.0.0.1:3306
+		DBName:    os.Getenv("DBNAME"),
 		ParseTime: true, // CHECK? (Helps to scan Date and Datetime to time.Time - READ more.)
 	}
 
@@ -45,10 +46,10 @@ var DB *sql.DB = NewDatabase() // a global variable to store the returned 'db' v
 
 /*
 func NewDatabase() *sql.DB {
-	dbname := "test"
-	user := "root"
-	password := "NoorBedi@1997"
-	address := "127.0.0.1:3306"
+	dbname := ""
+	user := ""
+	password := ""
+	address := ""
 
 	// dataSource := user + ":" + password + "@tcp(" + address + ")/" + dbname
 	// The 'Open' method does not creates a connection but only verify it's arg. (Hover over 'Open' method)
