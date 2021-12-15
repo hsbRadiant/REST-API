@@ -17,21 +17,21 @@ import (
 )
 
 var (
-	db         *sql.DB             = configuration.DB // DATBASE VARIABLE
-	Books      []models.Book                          // INITIALIZE A BOOK
-	SigningKey = []byte("harskey")                    // THE SIGNING KEY FOR JWT // []byte(os.Getenv("signingKey"))
+	db         *sql.DB = configuration.DB  // DATBASE VARIABLE
+	SigningKey         = []byte("harskey") // THE SIGNING KEY FOR JWT // []byte(os.Getenv("signingKey"))
+	// Books      []models.Book                          // INITIALIZE A BOOK
 	// emailRegex = "^[a-zA-Z0-9.!#$%&'*+\\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$"
 	// emailRegex = regexp.MustCompile("^[a-zA-Z0-9.!#$%&'*+\\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$")
 )
 
-// To check an error anywhere :
+// To check an error anywhere and log it :
 func CheckError(e error) {
 	if e != nil {
 		log.Fatal(e.Error())
 	}
 }
 
-func CheckErrorJSON(w http.ResponseWriter, code int, message string) {
+func CheckErrorAsJSON(w http.ResponseWriter, message string, code int) {
 	response, _ := json.Marshal(map[string]string{"error": message}) // creating a new instance of map type and passing it to be marshalled into JSON.
 	// w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.WriteHeader(code)
@@ -60,26 +60,33 @@ type CustomClaims struct {
 	jwt.StandardClaims
 }
 
+/*
+ ~ The function ('AuthorizeClientRequest') takes in an endpoint (a fn. type with a 'repsonse type' and a 'request type' parameter).
+ ~ It returns an 'http.HandlerFunc' type.
+ ~ (Previously was returning 'http.Handler' type. It would had been correct had the handler been defined as :
+   'router.Handle("/books", controllers.AuthorizeClientRequest(controllers.GetBooks)).Methods("GET")'
+ ~ 'http.HandlerFunc(f)' allows to use any ordinary function (f) with appropriate signature to be used as an 'http.Handler'.
+*/
 // Creating a function to authorize requests first and then serve the endpoint or any resource :
-
-// The function ('AuthorizeClientRequest') takes in an endpoint (i.e a fn. type with a 'repsonse type' and a 'request typ'e parameter).
-// It returns an 'http.HandlerFunc' type. Previosuly was returning 'http.Handler'. This was correct had the handler been defined as router.Handle("/books", controllers.AuthorizeClientRequest(controllers.GetBooks)).Methods("GET").
-// 'http.HandlerFunc(f)' allows to use any ordinary function (f) with appropriate signature to be used as an 'http.Handler'.
 func AuthorizeClientRequest(endpoint func(http.ResponseWriter, *http.Request)) http.HandlerFunc {
 	var f = func(w http.ResponseWriter, r *http.Request) {
+		setContentType(w)
 		cookie, err := r.Cookie("JWT")
-		// Checking error(s) :
 		if err != nil {
 			if err == http.ErrNoCookie {
-				// w.Write([]byte("No cookie sent with the request."))
+				// setContentType(w)
 				// w.WriteHeader(http.StatusUnauthorized)
-				http.Error(w, "No cookie sent with the request. ERROR - "+err.Error(), http.StatusUnauthorized)
+				// (http.Error or Error functions write a text/plain type content to the header - SEE DEFINITION OF 'Error' fn)
+				// http.Error(w, "No cookie sent with the request. ERROR - "+err.Error(), http.StatusUnauthorized)
+				CheckErrorAsJSON(w, "(As JSON) No cookie sent with the request. "+err.Error(), http.StatusUnauthorized)
+				return
 			}
-			http.Error(w, err.Error(), http.StatusBadRequest)
+			// http.Error(w, err.Error(), http.StatusBadRequest)
+			CheckErrorAsJSON(w, "(As JSON) "+err.Error(), http.StatusBadRequest)
 			return
 		}
 
-		tokenString := cookie.Value // will store JWT string stored as a value of the cookie sent.
+		tokenString := cookie.Value // JWT string stored as a value of the cookie sent is stored in 'tokenString'.
 
 		// An instance of the claims struct :
 		claims := &CustomClaims{}
@@ -432,7 +439,7 @@ func CreateBook(w http.ResponseWriter, r *http.Request) {
 	err := json.NewDecoder(r.Body).Decode(&book)
 	// fmt.Fprintln(w, book)
 	if err != nil {
-		CheckErrorJSON(w, http.StatusInternalServerError, err.Error())
+		CheckErrorAsJSON(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	// fmt.Println("CHECK")
@@ -445,13 +452,13 @@ func CreateBook(w http.ResponseWriter, r *http.Request) {
 
 	stmt, e := db.Prepare("INSERT INTO books (title, description) VALUES (?,?)")
 	if e != nil {
-		CheckErrorJSON(w, http.StatusInternalServerError, e.Error())
+		CheckErrorAsJSON(w, e.Error(), http.StatusInternalServerError)
 		return
 	}
 	defer stmt.Close()
 	res, e := stmt.Exec(book.Title, book.Description)
 	if e != nil {
-		CheckErrorJSON(w, http.StatusInternalServerError, "Not able to insert in the Database. Error = "+e.Error())
+		CheckErrorAsJSON(w, "Not able to insert in the Database. Error = "+e.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -463,25 +470,25 @@ func CreateBook(w http.ResponseWriter, r *http.Request) {
 
 	// stmt, e = db.Prepare("INSERT INTO authors (name, book_id) VALUES (?,?)")
 	// if e != nil {
-	// 	CheckErrorJSON(w, http.StatusInternalServerError, e.Error())
+	// 	CheckErrorAsJSON(w, http.StatusInternalServerError, e.Error())
 	// 	return
 	// }
 	// defer stmt.Close()
 	// _, e = stmt.Exec(book.Author.Name, book.ID)
 	// if e != nil {
-	// 	CheckErrorJSON(w, http.StatusInternalServerError, "Not able to insert in the Database. Error = "+e.Error())
+	// 	CheckErrorAsJSON(w, http.StatusInternalServerError, "Not able to insert in the Database. Error = "+e.Error())
 	// 	return
 	// }
 
 	// stmt, e = db.Prepare("INSERT INTO booksauthors (book_id, book_title, book_description, author_name) VALUES (?,?,?,?)")
 	// if e != nil {
-	// 	CheckErrorJSON(w, http.StatusInternalServerError, e.Error())
+	// 	CheckErrorAsJSON(w, http.StatusInternalServerError, e.Error())
 	// 	return
 	// }
 	// defer stmt.Close()
 	// _, e = stmt.Exec(book.ID, book.Title, book.Description, book.Author.Name)
 	// if e != nil {
-	// 	CheckErrorJSON(w, http.StatusInternalServerError, "Not able to insert in the Database. Error = "+e.Error())
+	// 	CheckErrorAsJSON(w, http.StatusInternalServerError, "Not able to insert in the Database. Error = "+e.Error())
 	// 	return
 	// }
 
@@ -622,7 +629,7 @@ func DeleteBook(w http.ResponseWriter, r *http.Request) {
 
 	// res, err := db.Exec("UPDATE authors SET book_id = NULL where book_id = ?", params["id"])
 	// if err != nil {
-	// 	CheckErrorJSON(w, http.StatusInternalServerError, err.Error())
+	// 	CheckErrorAsJSON(w, http.StatusInternalServerError, err.Error())
 	// 	return
 	// }
 	// if number, _ := res.RowsAffected(); number == 0 {
@@ -635,7 +642,7 @@ func DeleteBook(w http.ResponseWriter, r *http.Request) {
 	// Do not need to return rows on executing delete statement so uing 'db.Exec' method.
 	res, err := db.Exec("DELETE FROM books WHERE id = ?", params["id"])
 	if err != nil {
-		CheckErrorJSON(w, http.StatusInternalServerError, err.Error())
+		CheckErrorAsJSON(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	// CheckError(err)
@@ -708,28 +715,28 @@ func CreateAuthor(w http.ResponseWriter, r *http.Request) {
 
 	var author models.Author
 	err := json.NewDecoder(r.Body).Decode(&author)
-	// CheckErrorJSON(w, http.StatusInternalServerError, err.Error())
+	// CheckErrorAsJSON(w, http.StatusInternalServerError, err.Error())
 	// If not declared inside an if statement then will give an 'invalid memory / nil pointer dereference' error while testing the function.
-	// This is because, if the 'Decode' method does not produces any error then 'err = nil' and this value will be passed to 'CheckErrorJSON' function like - CheckErrorJSON(w, http.InternalServerError, nil).
+	// This is because, if the 'Decode' method does not produces any error then 'err = nil' and this value will be passed to 'CheckErrorAsJSON' function like - CheckErrorAsJSON(w, http.InternalServerError, nil).
 	// So, that's why the error is 'invalid memory add / nil pointer dereference'. - I THINK
 	if err != nil {
-		CheckErrorJSON(w, http.StatusInternalServerError, err.Error())
+		CheckErrorAsJSON(w, err.Error(), http.StatusInternalServerError)
 	}
 	// if err := author.Validate(); err != nil {
-	// 	CheckErrorJSON(w, http.StatusInternalServerError, "Validation error "+err.Error())
+	// 	CheckErrorAsJSON(w, http.StatusInternalServerError, "Validation error "+err.Error())
 	// 	fmt.Fprintln(w, err.Error())
 	// 	return
 	// }
 
 	stmt, err := db.Prepare("INSERT INTO authors (name) VALUES (?)")
 	if err != nil {
-		CheckErrorJSON(w, http.StatusInternalServerError, err.Error())
+		CheckErrorAsJSON(w, err.Error(), http.StatusInternalServerError)
 	}
 	defer stmt.Close()
 
 	res, err := stmt.Exec(author.Name)
 	if err != nil {
-		CheckErrorJSON(w, http.StatusInternalServerError, "Not able to insert a book in the database. ERROR - "+err.Error())
+		CheckErrorAsJSON(w, "Not able to insert a book in the database. ERROR - "+err.Error(), http.StatusInternalServerError)
 	}
 
 	if number, _ := res.RowsAffected(); number != 0 {
